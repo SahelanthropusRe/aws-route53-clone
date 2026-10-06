@@ -117,7 +117,7 @@ export default function CreateRecordPage() {
           <textarea
             required
             rows={4}
-            placeholder={recordType === "A" ? "192.0.2.1\n198.51.100.1" : "Value format"}
+            placeholder={getPlaceholderForType(recordType)}
             value={values}
             onChange={(e) => setValues(e.target.value)}
             className="w-full font-mono text-xs px-3 py-2 border border-aws-borderDark rounded focus:outline-none focus:border-aws-orange"
@@ -171,5 +171,19 @@ function getRecordTypeDescription(type: string): string {
     case "CAA": return "Certificate Authority Authorization";
     case "NS": return "Name server delegation";
     default: return "";
+  }
+}
+function getPlaceholderForType(type: string): string {
+  switch (type) {
+    case "A": return "192.0.2.1\n198.51.100.1";
+    case "AAAA": return "2001:0db8:85a3:0:0:8a2e:0370:7334";
+    case "CNAME": return "example.com\nwww.example.com";
+    case "MX": return "10 mailserver.example.com\n20 mailserver2.example.com";
+    case "TXT": return '"Sample text entry"\n"v=spf1 include:_spf.example.com ~all"';
+    case "PTR": return "hostname.example.com";
+    case "SRV": return "1 10 5269 xmpp-server.example.com.";
+    case "CAA": return '0 issue "amazon.com"';
+    case "NS": return "ns-1.awsdns-01.com.\nns-2.awsdns-02.net.";
+    default: return "Value format";
   }
 }

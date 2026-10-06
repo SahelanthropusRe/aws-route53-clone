@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Trash2, Search, ArrowLeft, RefreshCw } from "lucide-react";
+import { Plus, Trash2, Search, ArrowLeft, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchApi } from "@/lib/api";
+import Alert from "@/components/aws/Alert";
+import Modal from "@/components/aws/Modal";
 
 interface RecordItem {
   id: string;
@@ -34,6 +36,12 @@ export default function ZoneDetailPage() {
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // --- UI UPGRADE STATES ---
+  const [alert, setAlert] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -43,6 +51,7 @@ export default function ZoneDetailPage() {
       ]);
       setZone(zoneData);
       setRecords(recordsData);
+      setCurrentPage(1); // Reset to page 1 on new search
     } catch (err) {
       console.error(err);
     } finally {
@@ -54,23 +63,40 @@ export default function ZoneDetailPage() {
     loadData();
   }, [zoneId, search]);
 
-  const handleDeleteRecord = async () => {
+  // --- MODAL DELETE LOGIC ---
+  const handleDeleteConfirm = async () => {
     if (!selectedRecordId) return;
-    if (!confirm("Are you sure you want to delete this record?")) return;
+    setIsModalOpen(false); // Close modal immediately
 
     try {
       await fetchApi(`/hostedzones/${zoneId}/records/${selectedRecordId}`, {
         method: "DELETE",
       });
+      setAlert({ type: "success", message: "Record successfully deleted." });
       setSelectedRecordId(null);
       loadData();
     } catch (err: any) {
-      alert(err.message || "Failed to delete record");
+      setAlert({ type: "error", message: err.message || "Failed to delete record." });
     }
   };
 
+  // --- PAGINATION MATH ---
+  const totalPages = Math.ceil(records.length / itemsPerPage);
+  const paginatedRecords = records.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
+    <div className="space-y-4 max-w-7xl mx-auto relative">
+      
+      {/* --- ALERT & MODAL COMPONENTS --- */}
+      <Alert type={alert.type} message={alert.message} onClose={() => setAlert({ type: null, message: "" })} />
+      <Modal 
+        isOpen={isModalOpen} 
+        title="Delete record" 
+        message="Are you sure you want to delete this record? This action cannot be undone and may affect internet routing."
+        onConfirm={handleDeleteConfirm} 
+        onCancel={() => setIsModalOpen(false)} 
+      />
+
       {/* Breadcrumb & Navigation */}
       <div className="flex items-center space-x-2 text-xs text-aws-muted">
         <Link href="/hostedzones" className="hover:underline flex items-center space-x-1">
@@ -95,7 +121,7 @@ export default function ZoneDetailPage() {
           </div>
           <div>
             <span className="block font-semibold text-aws-text">Record count</span>
-            <span>{zone?.record_count}</span>
+            <span>{records.length}</span>
           </div>
           <div>
             <span className="block font-semibold text-aws-text">Description</span>
@@ -126,12 +152,12 @@ export default function ZoneDetailPage() {
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
             <button
-              onClick={handleDeleteRecord}
+              onClick={() => setIsModalOpen(true)}
               disabled={!selectedRecordId}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded font-medium border ${
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded font-bold border ${
                 selectedRecordId
-                  ? "border-red-400 text-red-600 hover:bg-red-50"
-                  : "border-aws-border text-gray-400 cursor-not-allowed"
+                  ? "border-aws-borderDark text-aws-text hover:bg-gray-50"
+                  : "border-transparent text-gray-400 bg-gray-100 cursor-not-allowed"
               }`}
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -167,11 +193,12 @@ export default function ZoneDetailPage() {
                   </td>
                 </tr>
               ) : (
-                records.map((rec) => (
+                /* --- USING paginatedRecords --- */
+                paginatedRecords.map((rec) => (
                   <tr
                     key={rec.id}
                     className={`hover:bg-blue-50/40 cursor-pointer ${
-                      selectedRecordId === rec.id ? "bg-amber-50/60" : ""
+                      selectedRecordId === rec.id ? "bg-blue-50" : ""
                     }`}
                   >
                     <td className="px-3 py-2.5">
@@ -179,14 +206,14 @@ export default function ZoneDetailPage() {
                         type="radio"
                         checked={selectedRecordId === rec.id}
                         onChange={() => setSelectedRecordId(rec.id)}
-                        className="text-aws-orange focus:ring-aws-orange"
+                        className="text-aws-blue focus:ring-aws-blue"
                       />
                     </td>
                     <td className="px-3 py-2.5 font-semibold text-aws-text">{rec.name}</td>
                     <td className="px-3 py-2.5 font-mono text-[11px] font-bold text-gray-700">{rec.type}</td>
                     <td className="px-3 py-2.5 text-aws-muted">{rec.routing_policy}</td>
                     <td className="px-3 py-2.5">{rec.ttl}</td>
-                    <td className="px-3 py-2.5 font-mono text-[11px] text-gray-800 whitespace-pre-line">
+                    <td className="px-3 py-2.5 font-mono text-[11px] text-gray-800 whitespace-pre-line truncate max-w-xs">
                       {rec.values}
                     </td>
                   </tr>
@@ -195,6 +222,33 @@ export default function ZoneDetailPage() {
             </tbody>
           </table>
         </div>
+
+        {/* --- PAGINATION FOOTER --- */}
+        <div className="p-3 border-t border-aws-border flex items-center justify-between text-xs text-aws-muted">
+          <span>
+            {records.length === 0 
+              ? "0 records" 
+              : `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, records.length)} of ${records.length} records`}
+          </span>
+          <div className="flex items-center space-x-3">
+            <button 
+              disabled={currentPage === 1} 
+              onClick={() => setCurrentPage(p => p - 1)} 
+              className="p-1 border border-aws-borderDark rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="font-mono text-aws-text font-bold">{currentPage}</span>
+            <button 
+              disabled={currentPage === totalPages || totalPages === 0} 
+              onClick={() => setCurrentPage(p => p + 1)} 
+              className="p-1 border border-aws-borderDark rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );

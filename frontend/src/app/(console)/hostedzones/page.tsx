@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Trash2, Search, RefreshCw } from "lucide-react";
+import { Plus, Trash2, Search, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchApi } from "@/lib/api";
+import Alert from "@/components/aws/Alert";
+import Modal from "@/components/aws/Modal";
 
 interface HostedZone {
   id: string;
@@ -11,7 +13,6 @@ interface HostedZone {
   description: string;
   type: string;
   record_count: number;
-  created_at: string;
 }
 
 export default function HostedZonesPage() {
@@ -20,14 +21,20 @@ export default function HostedZonesPage() {
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // UI Upgrade States
+  const [alert, setAlert] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const loadZones = async () => {
     try {
       setLoading(true);
-      const query = search ? `?search=${encodeURIComponent(search)}` : "";
-      const data = await fetchApi<HostedZone[]>(`/hostedzones${query}`);
+      const data = await fetchApi<HostedZone[]>(`/hostedzones${search ? `?search=${search}` : ""}`);
       setZones(data);
-    } catch (err) {
-      console.error(err);
+      setCurrentPage(1); // Reset to page 1 when data changes
+    } catch (err: any) {
+      console.error("Failed to load zones:", err);
     } finally {
       setLoading(false);
     }
@@ -37,34 +44,48 @@ export default function HostedZonesPage() {
     loadZones();
   }, [search]);
 
-  const handleDelete = async () => {
+  // Modal Delete Logic
+  const handleDeleteConfirm = async () => {
     if (!selectedZoneId) return;
-    if (!confirm(`Are you sure you want to delete this hosted zone?`)) return;
+    setIsModalOpen(false);
 
     try {
-      await fetchApi(`/hostedzones/${selectedZoneId}`, { method: "DELETE" });
+      await fetchApi(`/hostedzones/${selectedZoneId}`, {
+        method: "DELETE",
+      });
+      setAlert({ type: "success", message: "Hosted zone successfully deleted." });
       setSelectedZoneId(null);
       loadZones();
     } catch (err: any) {
-      alert(err.message || "Failed to delete hosted zone");
+      setAlert({ type: "error", message: err.message || "Failed to delete hosted zone." });
     }
   };
 
+  // Pagination Math
+  const totalPages = Math.ceil(zones.length / itemsPerPage);
+  const paginatedZones = zones.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-aws-text">Hosted zones</h1>
-          <p className="text-xs text-aws-muted mt-0.5">
-            A hosted zone contains records that define how you want to route traffic on the internet for a domain.
-          </p>
-        </div>
+    <div className="space-y-4 max-w-7xl mx-auto relative">
+      
+      {/* Alert & Modal Components */}
+      <Alert type={alert.type} message={alert.message} onClose={() => setAlert({ type: null, message: "" })} />
+      <Modal 
+        isOpen={isModalOpen} 
+        title="Delete hosted zone" 
+        message="Are you sure you want to delete this hosted zone? All associated DNS records will be permanently deleted. This action cannot be undone."
+        onConfirm={handleDeleteConfirm} 
+        onCancel={() => setIsModalOpen(false)} 
+      />
+
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-aws-text">Hosted zones</h1>
+        <p className="text-xs text-aws-muted mt-1">
+          A hosted zone contains records that define how you want to route traffic on the internet for a domain.
+        </p>
       </div>
 
-      {/* Main Table Container */}
       <div className="bg-white border border-aws-border rounded shadow-sm">
-        {/* Action Controls Bar */}
         <div className="p-3 border-b border-aws-border flex items-center justify-between gap-4">
           <div className="relative w-80">
             <input
@@ -81,17 +102,16 @@ export default function HostedZonesPage() {
             <button
               onClick={loadZones}
               className="p-1.5 border border-aws-borderDark rounded hover:bg-gray-50 text-aws-muted"
-              title="Refresh"
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
             <button
-              onClick={handleDelete}
+              onClick={() => setIsModalOpen(true)}
               disabled={!selectedZoneId}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded font-medium border ${
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded font-bold border ${
                 selectedZoneId
-                  ? "border-red-400 text-red-600 hover:bg-red-50"
-                  : "border-aws-border text-gray-400 cursor-not-allowed"
+                  ? "border-aws-borderDark text-aws-text hover:bg-gray-50"
+                  : "border-transparent text-gray-400 bg-gray-100 cursor-not-allowed"
               }`}
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -99,7 +119,7 @@ export default function HostedZonesPage() {
             </button>
             <Link
               href="/hostedzones/create"
-              className="flex items-center space-x-1 bg-aws-orange hover:bg-aws-orangeHover text-white px-3 py-1.5 rounded font-bold transition-colors"
+              className="flex items-center space-x-1 bg-aws-orange hover:bg-aws-orangeHover text-white px-3 py-1.5 rounded font-bold"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create hosted zone</span>
@@ -107,7 +127,6 @@ export default function HostedZonesPage() {
           </div>
         </div>
 
-        {/* AWS Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#fafafa] border-b border-aws-border text-aws-muted font-bold">
@@ -129,39 +148,70 @@ export default function HostedZonesPage() {
                 </tr>
               ) : zones.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-8 text-center text-aws-muted">
-                    No hosted zones found. Click <strong>Create hosted zone</strong> to get started.
+                  <td colSpan={6} className="px-3 py-6 text-center text-aws-muted">
+                    No hosted zones found. Click <span className="font-bold">Create hosted zone</span> to get started.
                   </td>
                 </tr>
               ) : (
-                zones.map((zone) => (
+                paginatedZones.map((z) => (
                   <tr
-                    key={zone.id}
-                    className={`hover:bg-blue-50/40 cursor-pointer ${
-                      selectedZoneId === zone.id ? "bg-amber-50/60" : ""
+                    key={z.id}
+                    className={`hover:bg-blue-50/40 ${
+                      selectedZoneId === z.id ? "bg-blue-50" : ""
                     }`}
                   >
                     <td className="px-3 py-2.5">
                       <input
                         type="radio"
-                        checked={selectedZoneId === zone.id}
-                        onChange={() => setSelectedZoneId(zone.id)}
-                        className="text-aws-orange focus:ring-aws-orange"
+                        checked={selectedZoneId === z.id}
+                        onChange={() => setSelectedZoneId(z.id)}
+                        className="text-aws-blue focus:ring-aws-blue cursor-pointer"
                       />
                     </td>
-                    <td className="px-3 py-2.5 font-semibold text-aws-blue hover:underline">
-                      <Link href={`/hostedzones/${zone.id}`}>{zone.name}</Link>
+                    <td className="px-3 py-2.5">
+                      <Link
+                        href={`/hostedzones/${z.id}`}
+                        className="text-aws-blue hover:text-aws-blueHover hover:underline font-medium"
+                      >
+                        {z.name}
+                      </Link>
                     </td>
-                    <td className="px-3 py-2.5 text-aws-text">{zone.type}</td>
-                    <td className="px-3 py-2.5 text-aws-muted">{zone.description || "-"}</td>
-                    <td className="px-3 py-2.5">{zone.record_count}</td>
-                    <td className="px-3 py-2.5 font-mono text-gray-500 text-[11px]">{zone.id}</td>
+                    <td className="px-3 py-2.5">{z.type}</td>
+                    <td className="px-3 py-2.5 text-aws-muted">{z.description || "-"}</td>
+                    <td className="px-3 py-2.5">{z.record_count}</td>
+                    <td className="px-3 py-2.5 text-aws-muted font-mono text-[11px]">{z.id}</td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Footer */}
+        {zones.length > 0 && (
+          <div className="p-3 border-t border-aws-border flex items-center justify-between text-xs text-aws-muted">
+            <span>
+              Showing {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, zones.length)} of {zones.length} records
+            </span>
+            <div className="flex items-center space-x-3">
+              <button 
+                disabled={currentPage === 1} 
+                onClick={() => setCurrentPage(p => p - 1)} 
+                className="p-1 border border-aws-borderDark rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="font-mono text-aws-text font-bold">{currentPage}</span>
+              <button 
+                disabled={currentPage === totalPages || totalPages === 0} 
+                onClick={() => setCurrentPage(p => p + 1)} 
+                className="p-1 border border-aws-borderDark rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
