@@ -31,7 +31,7 @@ export default function HostedZonesPage() {
   const loadZones = async () => {
     try {
       setLoading(true);
-      const data = await fetchApi<HostedZone[]>(`/hostedzones${search ? `?search=${search}` : ""}`);
+      const data = await fetchApi<HostedZone[]>(`/api/hostedzones${search ? `?search=${search}` : ""}`);
       setZones(data);
       setCurrentPage(1); // Reset to page 1 when data changes
       setSelectedIds([]); // Clear selection when refreshing or searching
@@ -75,7 +75,7 @@ export default function HostedZonesPage() {
       // Execute all delete requests concurrently
       await Promise.all(
         selectedIds.map((id) => 
-          fetchApi(`/hostedzones/${id}`, { method: "DELETE" })
+          fetchApi(`/api/hostedzones/${id}`, { method: "DELETE" })
         )
       );
       setAlert({ type: "success", message: `Successfully deleted ${selectedIds.length} hosted zone(s).` });
