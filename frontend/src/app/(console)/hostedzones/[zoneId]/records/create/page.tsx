@@ -21,7 +21,7 @@ export default function CreateRecordPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchApi<any>(`/hostedzones/${zoneId}`).then((zone) => {
+    fetchApi<any>(`/api/hostedzones/${zoneId}`).then((zone) => {
       setZoneName(zone.name);
     });
   }, [zoneId]);
@@ -35,7 +35,7 @@ export default function CreateRecordPage() {
 
     try {
       setSubmitting(true);
-      await fetchApi(`/hostedzones/${zoneId}/records`, {
+      await fetchApi(`/api/hostedzones/${zoneId}/records`, {
         method: "POST",
         body: JSON.stringify({
           name: fullName,
