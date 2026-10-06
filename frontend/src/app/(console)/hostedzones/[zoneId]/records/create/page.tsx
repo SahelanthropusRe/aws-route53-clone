@@ -161,7 +161,7 @@ export default function CreateRecordPage() {
 
 function getRecordTypeDescription(type: string): string {
   switch (type) {
-    case "A": return "Routes traffic to an IPv4 address";
+    case "A": return "Routes traffic to an IPv4  address";
     case "AAAA": return "Routes traffic to an IPv6 address";
     case "CNAME": return "Routes traffic to another domain name";
     case "MX": return "Routes mail to mail servers";
