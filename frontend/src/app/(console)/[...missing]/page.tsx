@@ -6,7 +6,7 @@ export default function MissingPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4">
       {/* UFO SVG with a subtle hover/bounce animation */}
-      <div className="mb-8 text-aws-blue animate-[bounce_3s_infinite]">
+      <div className="mb-8 text-aws-blue dark:text-blue-400 animate-[bounce_3s_infinite] transition-colors">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="120"
@@ -35,10 +35,10 @@ export default function MissingPage() {
         </svg>
       </div>
 
-      <h1 className="text-3xl font-bold text-aws-text mb-2">
+      <h1 className="text-3xl font-bold text-aws-text dark:text-white mb-2 transition-colors">
         Feature Coming Soon
       </h1>
-      <p className="text-sm text-aws-muted max-w-md mx-auto mb-8">
+      <p className="text-sm text-aws-muted dark:text-gray-400 max-w-md mx-auto mb-8 transition-colors">
         We're still building this sector of the AWS console. Our alien engineers are working hard to bring this feature to you soon!
       </p>
 

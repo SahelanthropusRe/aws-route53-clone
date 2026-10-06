@@ -54,15 +54,15 @@ export default function CreateRecordPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
-      <div className="text-xs text-aws-muted">
-        <Link href={`/hostedzones/${zoneId}`} className="hover:underline">{zoneName || "Zone"}</Link> &gt; Create record
+      <div className="text-xs text-aws-muted dark:text-gray-400 transition-colors">
+        <Link href={`/hostedzones/${zoneId}`} className="hover:underline hover:text-aws-text dark:hover:text-white transition-colors">{zoneName || "Zone"}</Link> &gt; Create record
       </div>
-      <h1 className="text-xl font-bold text-aws-text">Quick create record</h1>
+      <h1 className="text-xl font-bold text-aws-text dark:text-white transition-colors">Quick create record</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white border border-aws-border rounded p-6 space-y-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-[#182231] border border-aws-border dark:border-gray-800 rounded p-6 space-y-6 shadow-sm transition-colors">
         {/* Record Name */}
         <div>
-          <label className="block text-xs font-bold text-aws-text mb-1">
+          <label className="block text-xs font-bold text-aws-text dark:text-gray-200 mb-1 transition-colors">
             Record name
           </label>
           <div className="flex items-center max-w-lg">
@@ -71,23 +71,23 @@ export default function CreateRecordPage() {
               placeholder="subdomain (optional)"
               value={subdomain}
               onChange={(e) => setSubdomain(e.target.value)}
-              className="flex-1 text-xs px-3 py-2 border border-aws-borderDark rounded-l focus:outline-none focus:border-aws-orange"
+              className="flex-1 text-xs px-3 py-2 border border-aws-borderDark dark:border-gray-700 bg-white dark:bg-[#0f1722] text-aws-text dark:text-gray-200 rounded-l focus:outline-none focus:border-aws-orange transition-colors"
             />
-            <span className="bg-gray-100 border border-l-0 border-aws-borderDark px-3 py-2 text-xs font-mono text-aws-muted rounded-r">
+            <span className="bg-gray-100 dark:bg-gray-800/50 border border-l-0 border-aws-borderDark dark:border-gray-700 px-3 py-2 text-xs font-mono text-aws-muted dark:text-gray-400 rounded-r transition-colors">
               .{zoneName || "domain.com"}
             </span>
           </div>
-          <p className="text-[11px] text-aws-muted mt-1">Leave empty to configure the root domain apex.</p>
+          <p className="text-[11px] text-aws-muted dark:text-gray-400 mt-1 transition-colors">Leave empty to configure the root domain apex.</p>
         </div>
 
         {/* Record Type & TTL */}
         <div className="grid grid-cols-2 gap-4 max-w-lg">
           <div>
-            <label className="block text-xs font-bold text-aws-text mb-1">Record type</label>
+            <label className="block text-xs font-bold text-aws-text dark:text-gray-200 mb-1 transition-colors">Record type</label>
             <select
               value={recordType}
               onChange={(e) => setRecordType(e.target.value)}
-              className="w-full text-xs px-3 py-2 border border-aws-borderDark rounded focus:outline-none focus:border-aws-orange bg-white"
+              className="w-full text-xs px-3 py-2 border border-aws-borderDark dark:border-gray-700 rounded focus:outline-none focus:border-aws-orange bg-white dark:bg-[#0f1722] text-aws-text dark:text-gray-200 transition-colors"
             >
               {RECORD_TYPES.map((t) => (
                 <option key={t} value={t}>{t} - {getRecordTypeDescription(t)}</option>
@@ -96,22 +96,22 @@ export default function CreateRecordPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-aws-text mb-1">TTL (Seconds)</label>
+            <label className="block text-xs font-bold text-aws-text dark:text-gray-200 mb-1 transition-colors">TTL (Seconds)</label>
             <input
               type="number"
               value={ttl}
               onChange={(e) => setTtl(Number(e.target.value))}
-              className="w-full text-xs px-3 py-2 border border-aws-borderDark rounded focus:outline-none focus:border-aws-orange"
+              className="w-full text-xs px-3 py-2 border border-aws-borderDark dark:border-gray-700 bg-white dark:bg-[#0f1722] text-aws-text dark:text-gray-200 rounded focus:outline-none focus:border-aws-orange transition-colors"
             />
           </div>
         </div>
 
         {/* Value/Route Traffic To */}
         <div>
-          <label className="block text-xs font-bold text-aws-text mb-1">
+          <label className="block text-xs font-bold text-aws-text dark:text-gray-200 mb-1 transition-colors">
             Value / Route traffic to <span className="text-red-500">*</span>
           </label>
-          <p className="text-[11px] text-aws-muted mb-2">
+          <p className="text-[11px] text-aws-muted dark:text-gray-400 mb-2 transition-colors">
             Enter one or more IP addresses or values on separate lines.
           </p>
           <textarea
@@ -120,17 +120,17 @@ export default function CreateRecordPage() {
             placeholder={getPlaceholderForType(recordType)}
             value={values}
             onChange={(e) => setValues(e.target.value)}
-            className="w-full font-mono text-xs px-3 py-2 border border-aws-borderDark rounded focus:outline-none focus:border-aws-orange"
+            className="w-full font-mono text-xs px-3 py-2 border border-aws-borderDark dark:border-gray-700 bg-white dark:bg-[#0f1722] text-aws-text dark:text-gray-200 rounded focus:outline-none focus:border-aws-orange transition-colors"
           />
         </div>
 
         {/* Routing Policy */}
         <div>
-          <label className="block text-xs font-bold text-aws-text mb-1">Routing policy</label>
+          <label className="block text-xs font-bold text-aws-text dark:text-gray-200 mb-1 transition-colors">Routing policy</label>
           <select
             value={routingPolicy}
             onChange={(e) => setRoutingPolicy(e.target.value)}
-            className="max-w-xs w-full text-xs px-3 py-2 border border-aws-borderDark rounded focus:outline-none focus:border-aws-orange bg-white"
+            className="max-w-xs w-full text-xs px-3 py-2 border border-aws-borderDark dark:border-gray-700 rounded focus:outline-none focus:border-aws-orange bg-white dark:bg-[#0f1722] text-aws-text dark:text-gray-200 transition-colors"
           >
             <option value="Simple">Simple routing</option>
             <option value="Weighted">Weighted</option>
@@ -139,17 +139,17 @@ export default function CreateRecordPage() {
           </select>
         </div>
 
-        <div className="pt-4 border-t border-aws-border flex items-center justify-end space-x-3 text-xs">
+        <div className="pt-4 border-t border-aws-border dark:border-gray-800 flex items-center justify-end space-x-3 text-xs transition-colors">
           <Link
             href={`/hostedzones/${zoneId}`}
-            className="px-4 py-2 border border-aws-borderDark rounded font-medium hover:bg-gray-50"
+            className="px-4 py-2 border border-aws-borderDark dark:border-gray-700 text-aws-text dark:text-gray-200 rounded font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={submitting}
-            className="bg-aws-orange hover:bg-aws-orangeHover text-white px-5 py-2 rounded font-bold shadow-sm disabled:opacity-50"
+            className="bg-aws-orange hover:bg-aws-orangeHover text-white px-5 py-2 rounded font-bold shadow-sm disabled:opacity-50 transition-colors"
           >
             {submitting ? "Saving..." : "Create records"}
           </button>

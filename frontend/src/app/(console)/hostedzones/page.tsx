@@ -18,7 +18,6 @@ interface HostedZone {
 export default function HostedZonesPage() {
   const [zones, setZones] = useState<HostedZone[]>([]);
   const [search, setSearch] = useState("");
-  // Replaced single ID string with an array of strings for bulk selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -105,40 +104,40 @@ export default function HostedZonesPage() {
       />
 
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-aws-text">Hosted zones</h1>
-        <p className="text-xs text-aws-muted mt-1">
+        <h1 className="text-2xl font-bold text-aws-text dark:text-white transition-colors">Hosted zones</h1>
+        <p className="text-xs text-aws-muted dark:text-gray-400 mt-1 transition-colors">
           A hosted zone contains records that define how you want to route traffic on the internet for a domain.
         </p>
       </div>
 
-      <div className="bg-white border border-aws-border rounded shadow-sm">
-        <div className="p-3 border-b border-aws-border flex items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#182231] border border-aws-border dark:border-gray-800 rounded shadow-sm transition-colors">
+        <div className="p-3 border-b border-aws-border dark:border-gray-800 flex items-center justify-between gap-4 transition-colors">
           <div className="relative w-80">
             <input
-              id="page-search" // <--- ADDED ID HERE
+              id="page-search"
               type="text"
-              placeholder="Filter by hosted zone name [Alt+S]" // <--- UPDATED PLACEHOLDER
+              placeholder="Filter by hosted zone name [Alt+S]"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full text-xs pl-8 pr-3 py-1.5 border border-aws-borderDark rounded focus:outline-none focus:border-aws-orange"
+              className="w-full text-xs pl-8 pr-3 py-1.5 border border-aws-borderDark dark:border-gray-700 bg-white dark:bg-[#0f1722] text-aws-text dark:text-gray-200 rounded focus:outline-none focus:border-aws-orange dark:focus:border-aws-orange transition-colors"
             />
-            <Search className="w-3.5 h-3.5 text-aws-muted absolute left-2.5 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-aws-muted dark:text-gray-400 absolute left-2.5 top-2.5" />
           </div>
 
           <div className="flex items-center space-x-2 text-xs">
             <button
               onClick={loadZones}
-              className="p-1.5 border border-aws-borderDark rounded hover:bg-gray-50 text-aws-muted"
+              className="p-1.5 border border-aws-borderDark dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-aws-muted dark:text-gray-400 transition-colors"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isDeleting ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={() => setIsModalOpen(true)}
               disabled={selectedIds.length === 0 || isDeleting}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded font-bold border ${
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded font-bold border transition-colors ${
                 selectedIds.length > 0 && !isDeleting
-                  ? "border-aws-borderDark text-aws-text hover:bg-gray-50"
-                  : "border-transparent text-gray-400 bg-gray-100 cursor-not-allowed"
+                  ? "border-aws-borderDark dark:border-gray-700 text-aws-text dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
+                  : "border-transparent text-gray-400 dark:text-gray-600 bg-gray-100 dark:bg-gray-800/50 cursor-not-allowed"
               }`}
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -146,7 +145,7 @@ export default function HostedZonesPage() {
             </button>
             <Link
               href="/hostedzones/create"
-              className="flex items-center space-x-1 bg-aws-orange hover:bg-aws-orangeHover text-white px-3 py-1.5 rounded font-bold"
+              className="flex items-center space-x-1 bg-aws-orange hover:bg-aws-orangeHover text-white px-3 py-1.5 rounded font-bold transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create hosted zone</span>
@@ -156,7 +155,7 @@ export default function HostedZonesPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#fafafa] border-b border-aws-border text-aws-muted font-bold">
+            <thead className="bg-[#fafafa] dark:bg-[#0f1722] border-b border-aws-border dark:border-gray-800 text-aws-muted dark:text-gray-400 font-bold transition-colors">
               <tr>
                 <th className="w-10 px-3 py-2.5">
                   <input
@@ -173,25 +172,27 @@ export default function HostedZonesPage() {
                 <th className="px-3 py-2.5">Hosted zone ID</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-aws-border">
+            <tbody className="divide-y divide-aws-border dark:divide-gray-800 transition-colors">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-aws-muted">
+                  <td colSpan={6} className="px-3 py-6 text-center text-aws-muted dark:text-gray-400">
                     Loading hosted zones...
                   </td>
                 </tr>
               ) : zones.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-aws-muted">
-                    No hosted zones found. Click <span className="font-bold">Create hosted zone</span> to get started.
+                  <td colSpan={6} className="px-3 py-6 text-center text-aws-muted dark:text-gray-400">
+                    No hosted zones found. Click <span className="font-bold text-aws-text dark:text-gray-200">Create hosted zone</span> to get started.
                   </td>
                 </tr>
               ) : (
                 paginatedZones.map((z) => (
                   <tr
                     key={z.id}
-                    className={`hover:bg-blue-50/40 ${
-                      selectedIds.includes(z.id) ? "bg-blue-50" : ""
+                    className={`transition-colors ${
+                      selectedIds.includes(z.id) 
+                        ? "bg-blue-50 dark:bg-[#232f3e]" 
+                        : "hover:bg-blue-50/40 dark:hover:bg-[#232f3e]"
                     }`}
                   >
                     <td className="px-3 py-2.5">
@@ -205,15 +206,15 @@ export default function HostedZonesPage() {
                     <td className="px-3 py-2.5">
                       <Link
                         href={`/hostedzones/${z.id}`}
-                        className="text-aws-blue hover:text-aws-blueHover hover:underline font-medium"
+                        className="text-aws-blue dark:text-blue-400 hover:text-aws-blueHover dark:hover:text-blue-300 hover:underline font-medium transition-colors"
                       >
                         {z.name}
                       </Link>
                     </td>
-                    <td className="px-3 py-2.5">{z.type}</td>
-                    <td className="px-3 py-2.5 text-aws-muted">{z.description || "-"}</td>
-                    <td className="px-3 py-2.5">{z.record_count}</td>
-                    <td className="px-3 py-2.5 text-aws-muted font-mono text-[11px]">{z.id}</td>
+                    <td className="px-3 py-2.5 text-aws-text dark:text-gray-300">{z.type}</td>
+                    <td className="px-3 py-2.5 text-aws-muted dark:text-gray-400">{z.description || "-"}</td>
+                    <td className="px-3 py-2.5 text-aws-text dark:text-gray-300">{z.record_count}</td>
+                    <td className="px-3 py-2.5 text-aws-muted dark:text-gray-500 font-mono text-[11px]">{z.id}</td>
                   </tr>
                 ))
               )}
@@ -223,7 +224,7 @@ export default function HostedZonesPage() {
 
         {/* Pagination Footer */}
         {zones.length > 0 && (
-          <div className="p-3 border-t border-aws-border flex items-center justify-between text-xs text-aws-muted">
+          <div className="p-3 border-t border-aws-border dark:border-gray-800 flex items-center justify-between text-xs text-aws-muted dark:text-gray-400 transition-colors">
             <span>
               Showing {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, zones.length)} of {zones.length} records
             </span>
@@ -231,15 +232,15 @@ export default function HostedZonesPage() {
               <button 
                 disabled={currentPage === 1} 
                 onClick={() => setCurrentPage(p => p - 1)} 
-                className="p-1 border border-aws-borderDark rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-1 border border-aws-borderDark dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-300 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="font-mono text-aws-text font-bold">{currentPage}</span>
+              <span className="font-mono text-aws-text dark:text-white font-bold">{currentPage}</span>
               <button 
                 disabled={currentPage === totalPages || totalPages === 0} 
                 onClick={() => setCurrentPage(p => p + 1)} 
-                className="p-1 border border-aws-borderDark rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-1 border border-aws-borderDark dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-300 transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
