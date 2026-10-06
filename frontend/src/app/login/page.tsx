@@ -18,9 +18,10 @@ export default function LoginPage() {
     setLoading(true);
 
     const endpoint = isRegistering ? "/api/auth/register" : "/api/auth/login";
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -55,16 +56,16 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#f2f3f3] dark:bg-[#0f1722] flex flex-col items-center justify-center py-12 px-4 font-sans text-[#0f1419] transition-colors">
       
       {/* AWS Logo */}
-<div className="mb-6">
-  {/* eslint-disable-next-line @next/next/no-img-element */}
-  <img
-    src="https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg"
-    alt="AWS"
-    width={80}
-    height={48}
-    className="h-12 w-auto dark:invert dark:hue-rotate-180 transition-all"
-  />
-</div>
+      <div className="mb-6">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg"
+          alt="AWS"
+          width={80}
+          height={48}
+          className="h-12 w-auto dark:invert dark:hue-rotate-180 transition-all"
+        />
+      </div>
 
       {/* Main Container */}
       <div className="flex flex-col md:flex-row w-full max-w-[900px] bg-white dark:bg-[#182231] rounded-lg shadow-[0_1px_4px_rgba(0,0,0,0.05)] border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors">
