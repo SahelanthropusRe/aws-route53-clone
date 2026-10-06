@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Trash2, Search, ArrowLeft, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+// --- ADDED Download ICON HERE ---
+import { Plus, Trash2, Search, ArrowLeft, RefreshCw, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import Alert from "@/components/aws/Alert";
 import Modal from "@/components/aws/Modal";
@@ -110,6 +111,25 @@ export default function ZoneDetailPage() {
     }
   };
 
+  // --- EXPORT TO JSON LOGIC ---
+  const handleExportJSON = () => {
+    const exportPayload = {
+      zone: zone,
+      records: records,
+      exported_at: new Date().toISOString(),
+    };
+    
+    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${zone?.name || "hosted-zone"}_export.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const isAllOnPageSelected = paginatedRecords.length > 0 && paginatedRecords.every((r) => selectedIds.includes(r.id));
 
   return (
@@ -163,9 +183,9 @@ export default function ZoneDetailPage() {
         <div className="p-3 border-b border-aws-border flex items-center justify-between gap-4">
           <div className="relative w-80">
             <input
-              id="page-search" // <--- ADDED ID HERE
+              id="page-search"
               type="text"
-              placeholder="Search by record name [Alt+S]" // <--- UPDATED PLACEHOLDER
+              placeholder="Search by record name [Alt+S]"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full text-xs pl-8 pr-3 py-1.5 border border-aws-borderDark rounded focus:outline-none focus:border-aws-orange"
@@ -192,6 +212,21 @@ export default function ZoneDetailPage() {
               <Trash2 className="w-3.5 h-3.5" />
               <span>Delete record {selectedIds.length > 0 ? `(${selectedIds.length})` : ""}</span>
             </button>
+            
+            {/* --- EXPORT BUTTON ADDED HERE --- */}
+            <button
+              onClick={handleExportJSON}
+              disabled={records.length === 0}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded font-bold border ${
+                records.length > 0
+                  ? "border-aws-borderDark text-aws-text hover:bg-gray-50"
+                  : "border-transparent text-gray-400 bg-gray-100 cursor-not-allowed"
+              }`}
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export JSON</span>
+            </button>
+
             <Link
               href={`/hostedzones/${zoneId}/records/create`}
               className="flex items-center space-x-1 bg-aws-orange hover:bg-aws-orangeHover text-white px-3 py-1.5 rounded font-bold"
