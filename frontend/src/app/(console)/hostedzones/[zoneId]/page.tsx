@@ -33,8 +33,10 @@ export default function ZoneDetailPage() {
   const [zone, setZone] = useState<HostedZone | null>(null);
   const [records, setRecords] = useState<RecordItem[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
+  // --- REPLACED single ID string with an array of strings for bulk selection ---
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // --- UI UPGRADE STATES ---
   const [alert, setAlert] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
@@ -52,6 +54,7 @@ export default function ZoneDetailPage() {
       setZone(zoneData);
       setRecords(recordsData);
       setCurrentPage(1); // Reset to page 1 on new search
+      setSelectedIds([]); // Clear selections on load
     } catch (err) {
       console.error(err);
     } finally {
@@ -63,26 +66,51 @@ export default function ZoneDetailPage() {
     loadData();
   }, [zoneId, search]);
 
-  // --- MODAL DELETE LOGIC ---
-  const handleDeleteConfirm = async () => {
-    if (!selectedRecordId) return;
-    setIsModalOpen(false); // Close modal immediately
+  // --- PAGINATION MATH (Moved up so bulk logic can access it) ---
+  const totalPages = Math.ceil(records.length / itemsPerPage);
+  const paginatedRecords = records.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    try {
-      await fetchApi(`/hostedzones/${zoneId}/records/${selectedRecordId}`, {
-        method: "DELETE",
-      });
-      setAlert({ type: "success", message: "Record successfully deleted." });
-      setSelectedRecordId(null);
-      loadData();
-    } catch (err: any) {
-      setAlert({ type: "error", message: err.message || "Failed to delete record." });
+  // --- BULK TOGGLE LOGIC ---
+  const handleToggleAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(paginatedRecords.map((r) => r.id));
+    } else {
+      setSelectedIds([]);
     }
   };
 
-  // --- PAGINATION MATH ---
-  const totalPages = Math.ceil(records.length / itemsPerPage);
-  const paginatedRecords = records.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const handleToggleOne = (id: string) => {
+    setSelectedIds((prev) => 
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  // --- MODAL CONCURRENT BULK DELETE LOGIC ---
+  const handleDeleteConfirm = async () => {
+    if (selectedIds.length === 0) return;
+    setIsModalOpen(false); // Close modal immediately
+    setIsDeleting(true);
+
+    try {
+      // Execute all delete requests concurrently using your specific API path
+      await Promise.all(
+        selectedIds.map((id) =>
+          fetchApi(`/hostedzones/${zoneId}/records/${id}`, {
+            method: "DELETE",
+          })
+        )
+      );
+      setAlert({ type: "success", message: `Successfully deleted ${selectedIds.length} record(s).` });
+      setSelectedIds([]);
+      loadData();
+    } catch (err: any) {
+      setAlert({ type: "error", message: err.message || "Failed to delete one or more records." });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const isAllOnPageSelected = paginatedRecords.length > 0 && paginatedRecords.every((r) => selectedIds.includes(r.id));
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto relative">
@@ -91,8 +119,8 @@ export default function ZoneDetailPage() {
       <Alert type={alert.type} message={alert.message} onClose={() => setAlert({ type: null, message: "" })} />
       <Modal 
         isOpen={isModalOpen} 
-        title="Delete record" 
-        message="Are you sure you want to delete this record? This action cannot be undone and may affect internet routing."
+        title={`Delete ${selectedIds.length} record${selectedIds.length > 1 ? 's' : ''}`} 
+        message={`Are you sure you want to delete ${selectedIds.length} DNS record(s)? This action cannot be undone and may affect internet routing.`}
         onConfirm={handleDeleteConfirm} 
         onCancel={() => setIsModalOpen(false)} 
       />
@@ -135,8 +163,9 @@ export default function ZoneDetailPage() {
         <div className="p-3 border-b border-aws-border flex items-center justify-between gap-4">
           <div className="relative w-80">
             <input
+              id="page-search" // <--- ADDED ID HERE
               type="text"
-              placeholder="Search by record name"
+              placeholder="Search by record name [Alt+S]" // <--- UPDATED PLACEHOLDER
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full text-xs pl-8 pr-3 py-1.5 border border-aws-borderDark rounded focus:outline-none focus:border-aws-orange"
@@ -149,19 +178,19 @@ export default function ZoneDetailPage() {
               onClick={loadData}
               className="p-1.5 border border-aws-borderDark rounded hover:bg-gray-50 text-aws-muted"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className={`w-3.5 h-3.5 ${isDeleting ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={() => setIsModalOpen(true)}
-              disabled={!selectedRecordId}
+              disabled={selectedIds.length === 0 || isDeleting}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded font-bold border ${
-                selectedRecordId
+                selectedIds.length > 0 && !isDeleting
                   ? "border-aws-borderDark text-aws-text hover:bg-gray-50"
                   : "border-transparent text-gray-400 bg-gray-100 cursor-not-allowed"
               }`}
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete record</span>
+              <span>Delete record {selectedIds.length > 0 ? `(${selectedIds.length})` : ""}</span>
             </button>
             <Link
               href={`/hostedzones/${zoneId}/records/create`}
@@ -177,7 +206,14 @@ export default function ZoneDetailPage() {
           <table className="w-full text-left text-xs">
             <thead className="bg-[#fafafa] border-b border-aws-border text-aws-muted font-bold">
               <tr>
-                <th className="w-10 px-3 py-2.5"></th>
+                <th className="w-10 px-3 py-2.5">
+                  <input
+                    type="checkbox"
+                    checked={isAllOnPageSelected}
+                    onChange={handleToggleAll}
+                    className="text-aws-blue focus:ring-aws-blue rounded-sm cursor-pointer"
+                  />
+                </th>
                 <th className="px-3 py-2.5">Record name</th>
                 <th className="px-3 py-2.5">Type</th>
                 <th className="px-3 py-2.5">Routing policy</th>
@@ -198,15 +234,15 @@ export default function ZoneDetailPage() {
                   <tr
                     key={rec.id}
                     className={`hover:bg-blue-50/40 cursor-pointer ${
-                      selectedRecordId === rec.id ? "bg-blue-50" : ""
+                      selectedIds.includes(rec.id) ? "bg-blue-50" : ""
                     }`}
                   >
                     <td className="px-3 py-2.5">
                       <input
-                        type="radio"
-                        checked={selectedRecordId === rec.id}
-                        onChange={() => setSelectedRecordId(rec.id)}
-                        className="text-aws-blue focus:ring-aws-blue"
+                        type="checkbox"
+                        checked={selectedIds.includes(rec.id)}
+                        onChange={() => handleToggleOne(rec.id)}
+                        className="text-aws-blue focus:ring-aws-blue rounded-sm cursor-pointer"
                       />
                     </td>
                     <td className="px-3 py-2.5 font-semibold text-aws-text">{rec.name}</td>

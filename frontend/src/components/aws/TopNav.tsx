@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Search, Bell, Settings, UserCircle, Globe } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,9 @@ import { useRouter } from "next/navigation";
 export default function TopNav() {
   const [username, setUsername] = useState("Loading...");
   const router = useRouter();
+  
+  // 1. Create a reference to attach to the search input
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Read the username we saved during login
@@ -19,6 +22,30 @@ export default function TopNav() {
       router.push("/login");
     }
   }, [router]);
+
+  // 2. Add the global keyboard shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Use e.code === "KeyS" because Alt+S outputs special characters on some systems
+      if (e.altKey && e.code === "KeyS") {
+        e.preventDefault(); 
+        
+        // Try to find a functional search bar on the current page first
+        const pageSearchInput = document.getElementById("page-search");
+        
+        if (pageSearchInput) {
+          pageSearchInput.focus(); // Focus the real search bar on the page
+        } else {
+          searchInputRef.current?.focus(); // Fallback to the top nav mockup
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    
+    // Cleanup the event listener when the component unmounts
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("route53_token");
@@ -40,6 +67,7 @@ export default function TopNav() {
       <div className="flex-1 max-w-lg mx-6">
         <div className="relative">
           <input
+            ref={searchInputRef} // 3. Attach the ref to the input element
             type="text"
             placeholder="Search for services, features, records [Alt+S]"
             className="w-full bg-[#2a3649] text-gray-200 placeholder-gray-400 pl-8 pr-3 py-1 rounded text-xs focus:outline-none focus:ring-1 focus:ring-aws-orange border border-[#3b4759]"
