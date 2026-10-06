@@ -1,10 +1,31 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Search, Bell, Settings, UserCircle, Globe } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function TopNav() {
+  const [username, setUsername] = useState("Loading...");
+  const router = useRouter();
+
+  useEffect(() => {
+    // Read the username we saved during login
+    const storedUsername = localStorage.getItem("route53_username");
+    if (storedUsername) {
+      setUsername(storedUsername);
+    } else {
+      // Redirect to login if no active session
+      router.push("/login");
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("route53_token");
+    localStorage.removeItem("route53_username");
+    router.push("/login");
+  };
+
   return (
     <header className="h-10 bg-aws-nav text-white flex items-center justify-between px-3 text-xs select-none sticky top-0 z-50">
       {/* Left: AWS Logo & Service Link */}
@@ -33,10 +54,23 @@ export default function TopNav() {
           <Globe className="w-3.5 h-3.5 text-blue-400" />
           <span className="font-medium">Global</span>
         </div>
-        <div className="flex items-center space-x-1 hover:text-white cursor-pointer px-2 py-1 rounded hover:bg-[#232f3e]">
+        
+        {/* Dynamic Username & Dropdown */}
+        <div className="relative group flex items-center space-x-1 hover:text-white cursor-pointer px-2 py-1 rounded hover:bg-[#232f3e]">
           <UserCircle className="w-4 h-4 text-aws-orange" />
-          <span>admin @ 1234-5678-9012</span>
+          <span>{username} @ 1234-5678-9012</span>
+          
+          {/* Sign Out Dropdown Menu */}
+          <div className="absolute right-0 top-full hidden group-hover:block bg-white text-aws-text border border-aws-border shadow-md rounded-sm py-1 min-w-[140px] z-50">
+            <button 
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-aws-blue hover:text-aws-blueHover hover:underline"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
+
         <Bell className="w-4 h-4 cursor-pointer hover:text-white" />
         <Settings className="w-4 h-4 cursor-pointer hover:text-white" />
       </div>

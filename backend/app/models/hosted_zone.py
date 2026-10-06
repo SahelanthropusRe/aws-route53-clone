@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 
@@ -19,5 +19,9 @@ class HostedZone(Base):
     vpc_region = Column(String, nullable=True)
     record_count = Column(Integer, default=2)  # Route53 defaults to NS + SOA
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    # --- NEW: Link to User ---
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    owner = relationship("User", back_populates="hosted_zones")
 
     records = relationship("Record", back_populates="hosted_zone", cascade="all, delete-orphan")

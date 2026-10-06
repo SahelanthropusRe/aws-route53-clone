@@ -3,6 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.session import Base, engine
 from app.api import hosted_zones, records, auth
 
+# CRITICAL: Import all models here so SQLAlchemy registers them 
+# before attempting to build the database tables.
+from app.models.user import User
+from app.models.hosted_zone import HostedZone
+# Assuming you have a record.py model, import it too:
+# from app.models.record import Record 
+
 # Auto-create tables on startup
 Base.metadata.create_all(bind=engine)
 
