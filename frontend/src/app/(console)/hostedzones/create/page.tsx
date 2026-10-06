@@ -35,17 +35,25 @@ export default function CreateHostedZonePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
-      <div className="text-xs text-aws-muted">
-        <Link href="/hostedzones" className="hover:underline">Hosted zones</Link> &gt; Create hosted zone
+      <div className="text-xs text-aws-muted dark:text-gray-400 transition-colors">
+        <Link href="/hostedzones" className="hover:underline">
+          Hosted zones
+        </Link>{" "}
+        &gt; Create hosted zone
       </div>
-      <h1 className="text-xl font-bold text-aws-text">Create hosted zone</h1>
+      <h1 className="text-xl font-bold text-aws-text dark:text-white transition-colors">
+        Create hosted zone
+      </h1>
 
-      <form onSubmit={handleSubmit} className="bg-white border border-aws-border rounded p-6 space-y-6 shadow-sm">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white dark:bg-[#182231] border border-aws-border dark:border-gray-800 rounded p-6 space-y-6 shadow-sm transition-colors"
+      >
         <div>
-          <label className="block text-xs font-bold text-aws-text mb-1">
+          <label className="block text-xs font-bold text-aws-text dark:text-gray-200 mb-1 transition-colors">
             Domain name <span className="text-red-500">*</span>
           </label>
-          <p className="text-[11px] text-aws-muted mb-2">
+          <p className="text-[11px] text-aws-muted dark:text-gray-400 mb-2 transition-colors">
             Enter the domain name (e.g., example.com).
           </p>
           <input
@@ -54,12 +62,12 @@ export default function CreateHostedZonePage() {
             placeholder="example.com"
             value={domainName}
             onChange={(e) => setDomainName(e.target.value)}
-            className="w-full max-w-md text-xs px-3 py-2 border border-aws-borderDark rounded focus:outline-none focus:border-aws-orange"
+            className="w-full max-w-md text-xs px-3 py-2 border border-aws-borderDark dark:border-gray-700 bg-white dark:bg-[#0f1722] text-aws-text dark:text-gray-200 rounded focus:outline-none focus:border-aws-orange transition-colors"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-aws-text mb-1">
+          <label className="block text-xs font-bold text-aws-text dark:text-gray-200 mb-1 transition-colors">
             Description
           </label>
           <input
@@ -67,12 +75,12 @@ export default function CreateHostedZonePage() {
             placeholder="Optional zone description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full max-w-md text-xs px-3 py-2 border border-aws-borderDark rounded focus:outline-none focus:border-aws-orange"
+            className="w-full max-w-md text-xs px-3 py-2 border border-aws-borderDark dark:border-gray-700 bg-white dark:bg-[#0f1722] text-aws-text dark:text-gray-200 rounded focus:outline-none focus:border-aws-orange transition-colors"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-aws-text mb-2">
+          <label className="block text-xs font-bold text-aws-text dark:text-gray-200 mb-2 transition-colors">
             Type
           </label>
           <div className="space-y-3">
@@ -86,8 +94,12 @@ export default function CreateHostedZonePage() {
                 className="mt-0.5 text-aws-orange focus:ring-aws-orange"
               />
               <div>
-                <span className="font-semibold text-aws-text">Public hosted zone</span>
-                <p className="text-aws-muted text-[11px]">Routes traffic on the internet.</p>
+                <span className="font-semibold text-aws-text dark:text-gray-200 transition-colors">
+                  Public hosted zone
+                </span>
+                <p className="text-aws-muted dark:text-gray-400 text-[11px] transition-colors">
+                  Routes traffic on the internet.
+                </p>
               </div>
             </label>
 
@@ -101,17 +113,21 @@ export default function CreateHostedZonePage() {
                 className="mt-0.5 text-aws-orange focus:ring-aws-orange"
               />
               <div>
-                <span className="font-semibold text-aws-text">Private hosted zone</span>
-                <p className="text-aws-muted text-[11px]">Routes traffic within an Amazon VPC.</p>
+                <span className="font-semibold text-aws-text dark:text-gray-200 transition-colors">
+                  Private hosted zone
+                </span>
+                <p className="text-aws-muted dark:text-gray-400 text-[11px] transition-colors">
+                  Routes traffic within an Amazon VPC.
+                </p>
               </div>
             </label>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-aws-border flex items-center justify-end space-x-3 text-xs">
+        <div className="pt-4 border-t border-aws-border dark:border-gray-800 flex items-center justify-end space-x-3 text-xs transition-colors">
           <Link
             href="/hostedzones"
-            className="px-4 py-2 border border-aws-borderDark rounded font-medium hover:bg-gray-50"
+            className="px-4 py-2 border border-aws-borderDark dark:border-gray-700 text-aws-text dark:text-gray-200 rounded font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             Cancel
           </Link>
