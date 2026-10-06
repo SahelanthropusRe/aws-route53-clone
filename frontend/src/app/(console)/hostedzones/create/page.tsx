@@ -18,7 +18,7 @@ export default function CreateHostedZonePage() {
 
     try {
       setSubmitting(true);
-      await fetchApi("/hostedzones", {
+      await fetchApi("/api/hostedzones", {
         method: "POST",
         body: JSON.stringify({
           name: domainName,
