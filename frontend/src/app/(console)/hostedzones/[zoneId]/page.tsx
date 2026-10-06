@@ -53,8 +53,10 @@ export default function ZoneDetailPage() {
     try {
       setLoading(true);
       const [zoneData, recordsData] = await Promise.all([
-        fetchApi<HostedZone>(`/hostedzones/${zoneId}`),
-        fetchApi<RecordItem[]>(`/hostedzones/${zoneId}/records${search ? `?search=${search}` : ""}`),
+        // UPDATED: Added /api prefix
+        fetchApi<HostedZone>(`/api/hostedzones/${zoneId}`),
+        // UPDATED: Added /api prefix
+        fetchApi<RecordItem[]>(`/api/hostedzones/${zoneId}/records${search ? `?search=${search}` : ""}`),
       ]);
       setZone(zoneData);
       setRecords(recordsData);
@@ -100,7 +102,8 @@ export default function ZoneDetailPage() {
       // Execute all delete requests concurrently using your specific API path
       await Promise.all(
         selectedIds.map((id) =>
-          fetchApi(`/hostedzones/${zoneId}/records/${id}`, {
+          // UPDATED: Added /api prefix
+          fetchApi(`/api/hostedzones/${zoneId}/records/${id}`, {
             method: "DELETE",
           })
         )
@@ -150,7 +153,10 @@ export default function ZoneDetailPage() {
     try {
       // Bypassing fetchApi to explicitly handle multipart/form-data
       const token = localStorage.getItem("route53_token");
-      const res = await fetch(`http://localhost:8000/api/hostedzones/${zoneId}/records/import`, {
+      
+      // UPDATED: Dynamically use the live URL instead of hardcoded localhost
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const res = await fetch(`${baseUrl}/api/hostedzones/${zoneId}/records/import`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`
