@@ -33,6 +33,14 @@ export default function CreateRecordPage() {
     // Build the fully-qualified record name
     const fullName = subdomain ? `${subdomain}.${zoneName}` : zoneName;
 
+    // --- NEW VALIDATION CHECK ---
+    const validationError = validateRecordValue(recordType, values, fullName, zoneName);
+    if (validationError) {
+      alert(`Validation Error: ${validationError}`);
+      return; // Stop the submission!
+    }
+    // -----------------------------
+
     try {
       setSubmitting(true);
       await fetchApi(`/api/hostedzones/${zoneId}/records`, {
@@ -173,6 +181,7 @@ function getRecordTypeDescription(type: string): string {
     default: return "";
   }
 }
+
 function getPlaceholderForType(type: string): string {
   switch (type) {
     case "A": return "192.0.2.1\n198.51.100.1";
@@ -186,4 +195,44 @@ function getPlaceholderForType(type: string): string {
     case "NS": return "ns-1.awsdns-01.com.\nns-2.awsdns-02.net.";
     default: return "Value format";
   }
+}
+
+// --- VALIDATION HELPER FUNCTION ---
+function validateRecordValue(type: string, value: string, recordName: string, zoneName: string): string | null {
+  const lines = value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) return "Value cannot be empty.";
+
+  for (const line of lines) {
+    switch (type) {
+      case "A":
+        // Regex to ensure it's a valid IPv4 address (e.g., 192.0.2.1)
+        const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        if (!ipv4Regex.test(line)) return `Invalid IPv4 address: ${line}`;
+        break;
+      
+      case "AAAA":
+        // Basic check to ensure it looks like an IPv6 address (contains colons)
+        if (!line.includes(':')) return `Invalid IPv6 address: ${line}`;
+        break;
+
+      case "CNAME":
+        // CNAMEs cannot be at the root domain apex (e.g., example.com)
+        if (recordName === zoneName) return "CNAME records cannot be created at the zone apex (root domain).";
+        // CNAMEs cannot be IP addresses
+        if (/^[0-9.]+$/.test(line)) return `Invalid CNAME target: ${line}. Must be a domain name, not an IP address.`;
+        break;
+
+      case "TXT":
+        // TXT records must be enclosed in double quotes
+        if (!line.startsWith('"') || !line.endsWith('"')) return `TXT record values must be enclosed in double quotation marks: ${line}`;
+        break;
+
+      case "MX":
+        // MX records require a priority number followed by a domain (e.g., "10 mail.example.com")
+        const mxRegex = /^[0-9]+\s+[a-zA-Z0-9.-]+$/;
+        if (!mxRegex.test(line)) return `Invalid MX format: ${line}. Must be "[priority] [domain]" (e.g., "10 mail.example.com").`;
+        break;
+    }
+  }
+  return null; // Return null if validation passes
 }
