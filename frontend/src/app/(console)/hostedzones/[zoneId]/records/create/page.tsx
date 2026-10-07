@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchApi } from "@/lib/api";
+// IMPORT YOUR CUSTOM ALERT COMPONENT
+import Alert from "@/components/aws/Alert";
 
 const RECORD_TYPES = ["A", "AAAA", "CNAME", "MX", "TXT", "PTR", "SRV", "CAA", "NS"];
 
@@ -19,6 +21,9 @@ export default function CreateRecordPage() {
   const [routingPolicy, setRoutingPolicy] = useState("Simple");
   const [values, setValues] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  
+  // ADD ALERT STATE
+  const [alert, setAlert] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
 
   useEffect(() => {
     fetchApi<any>(`/api/hostedzones/${zoneId}`).then((zone) => {
@@ -33,10 +38,10 @@ export default function CreateRecordPage() {
     // Build the fully-qualified record name
     const fullName = subdomain ? `${subdomain}.${zoneName}` : zoneName;
 
-    // --- NEW VALIDATION CHECK ---
+    // --- NEW VALIDATION CHECK USING CUSTOM ALERT ---
     const validationError = validateRecordValue(recordType, values, fullName, zoneName);
     if (validationError) {
-      alert(`Validation Error: ${validationError}`);
+      setAlert({ type: "error", message: `Validation Error: ${validationError}` });
       return; // Stop the submission!
     }
     // -----------------------------
@@ -55,13 +60,18 @@ export default function CreateRecordPage() {
       });
       router.push(`/hostedzones/${zoneId}`);
     } catch (err: any) {
-      alert(err.message || "Failed to create record");
+      // Use custom alert for backend errors as well
+      setAlert({ type: "error", message: err.message || "Failed to create record" });
       setSubmitting(false);
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
+      
+      {/* RENDER THE CUSTOM ALERT AT THE TOP */}
+      <Alert type={alert.type} message={alert.message} onClose={() => setAlert({ type: null, message: "" })} />
+
       <div className="text-xs text-aws-muted dark:text-gray-400 transition-colors">
         <Link href={`/hostedzones/${zoneId}`} className="hover:underline hover:text-aws-text dark:hover:text-white transition-colors">{zoneName || "Zone"}</Link> &gt; Create record
       </div>
