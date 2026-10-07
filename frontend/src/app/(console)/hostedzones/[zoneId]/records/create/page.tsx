@@ -86,8 +86,9 @@ export default function CreateRecordPage() {
           <div className="flex items-center max-w-lg">
             <input
               type="text"
-              placeholder="subdomain (optional)"
+              placeholder={recordType === "CNAME" ? "subdomain (required)" : "subdomain (optional)"}
               value={subdomain}
+              required={recordType === "CNAME"}
               onChange={(e) => setSubdomain(e.target.value)}
               className="flex-1 text-xs px-3 py-2 border border-aws-borderDark dark:border-gray-700 bg-white dark:bg-[#0f1722] text-aws-text dark:text-gray-200 rounded-l focus:outline-none focus:border-aws-orange transition-colors"
             />
@@ -215,34 +216,47 @@ function validateRecordValue(type: string, value: string, recordName: string, zo
   for (const line of lines) {
     switch (type) {
       case "A":
-        // Regex to ensure it's a valid IPv4 address (e.g., 192.0.2.1)
         const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
         if (!ipv4Regex.test(line)) return `Invalid IPv4 address: ${line}`;
         break;
       
       case "AAAA":
-        // Basic check to ensure it looks like an IPv6 address (contains colons)
         if (!line.includes(':')) return `Invalid IPv6 address: ${line}`;
         break;
 
       case "CNAME":
-        // CNAMEs cannot be at the root domain apex (e.g., example.com)
         if (recordName === zoneName) return "CNAME records cannot be created at the zone apex (root domain).";
-        // CNAMEs cannot be IP addresses
         if (/^[0-9.]+$/.test(line)) return `Invalid CNAME target: ${line}. Must be a domain name, not an IP address.`;
         break;
 
       case "TXT":
-        // TXT records must be enclosed in double quotes
         if (!line.startsWith('"') || !line.endsWith('"')) return `TXT record values must be enclosed in double quotation marks: ${line}`;
         break;
 
       case "MX":
-        // MX records require a priority number followed by a domain (e.g., "10 mail.example.com")
         const mxRegex = /^[0-9]+\s+[a-zA-Z0-9.-]+$/;
         if (!mxRegex.test(line)) return `Invalid MX format: ${line}. Must be "[priority] [domain]" (e.g., "10 mail.example.com").`;
         break;
+        
+      case "PTR":
+      case "NS":
+        // Basic check to ensure it looks like a valid hostname/domain
+        const domainRegex = /^[a-zA-Z0-9.-]+$/;
+        if (!domainRegex.test(line)) return `Invalid ${type} target: ${line}. Must be a valid domain name.`;
+        break;
+
+      case "SRV":
+        // SRV format: [priority] [weight] [port] [target]
+        const srvRegex = /^\d+\s+\d+\s+\d+\s+[a-zA-Z0-9.-]+$/;
+        if (!srvRegex.test(line)) return `Invalid SRV format: ${line}. Must be "[priority] [weight] [port] [target]".`;
+        break;
+
+      case "CAA":
+        // CAA format: [flags] [tag] "[value]"
+        const caaRegex = /^\d+\s+[a-zA-Z0-9]+\s+".+"$/;
+        if (!caaRegex.test(line)) return `Invalid CAA format: ${line}. Must be "[flags] [tag] \"[value]\"".`;
+        break;
     }
   }
-  return null; // Return null if validation passes
+  return null;
 }
